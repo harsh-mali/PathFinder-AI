@@ -15,7 +15,7 @@ public class GeminiService {
         // In a real-world scenario, you'd add more robust error handling here.
         GenerateContentResponse response =
                 geminiClient.models.generateContent(
-                        "gemini-1.5-flash", // Or your preferred model
+                        "gemini-2.5-flash", // Or your preferred model
                         prompt,
                         null);
 

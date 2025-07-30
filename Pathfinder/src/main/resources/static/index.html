@@ -3,86 +3,149 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard - Pathfinder AI</title>
+    <title>HQ - Pathfinder AI</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Bangers&family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
     <style>
-        body { font-family: 'Inter', sans-serif; background-color: #09090B; color: #FAFAFA; }
-        .card { background-color: #18181B; border: 1px solid #27272A; }
-        .custom-input { background-color: #27272A; border: 1px solid #3f3f46; }
-        .custom-input:focus { border-color: #6D28D9; box-shadow: 0 0 0 3px rgba(109, 40, 217, 0.3); outline: none; }
-        .shiny-button { background: linear-gradient(to right, #6D28D9, #EC4899); }
+        :root {
+            --bg-light: #EFF6FF; --bg-dark: #111827;
+            --card-light: #FFFFFF; --card-dark: #1F2937;
+            --text-light: #111827; --text-dark: #F9FAFB;
+            --border-light: #1F2937; --border-dark: #F9FAFB;
+            --accent-yellow: #FBBF24; --accent-blue: #3B82F6;
+        }
+        body { font-family: 'Inter', sans-serif; transition: background-color 0.3s, color 0.3s; }
+        body.dark-mode { background-color: var(--bg-dark); color: var(--text-dark); }
+        body:not(.dark-mode) { background-color: var(--bg-light); color: var(--text-light); }
+        h1, h2, h3 { font-family: 'Bangers', cursive; letter-spacing: 1.5px; }
+        .comic-panel {
+            background-color: var(--card-light);
+            border: 3px solid var(--border-light);
+            transition: all 0.3s;
+        }
+        .dark-mode .comic-panel { background-color: var(--card-dark); border-color: var(--border-dark); }
+        .comic-sticker {
+            background-color: var(--accent-yellow); color: black;
+            transform: rotate(-3deg);
+            display: inline-block;
+            font-size: 1.5rem;
+        }
+        .dark-mode .comic-sticker { background-color: var(--accent-blue); color: white; }
+        .custom-input { border: 2px solid #6B7280; }
+        .comic-button { background-color: var(--accent-blue); border: 2px solid var(--border-light); box-shadow: 4px 4px 0px var(--border-light); transition: all 0.1s ease-in-out; }
+        .dark-mode .comic-button { border-color: var(--border-dark); box-shadow: 4px 4px 0px var(--border-dark); }
+        .comic-button:active { transform: translate(4px, 4px); box-shadow: none; }
+        .modal-overlay { background-color: rgba(0,0,0,0.6); backdrop-filter: blur(4px); }
     </style>
 </head>
-<body class="min-h-screen">
+<body class="p-4">
 
 <script>
-    // Redirect to login if no token is found
-    if (!localStorage.getItem('jwt_token')) {
-        window.location.href = '/login.html';
-    }
+    const token = localStorage.getItem('jwt_token');
+    if (!token) { window.location.href = '/login.html'; }
+    if (localStorage.getItem('theme') === 'dark') { document.body.classList.add('dark-mode'); }
 </script>
 
-<header class="card sticky top-0 z-50">
-    <nav class="container mx-auto px-6 py-4 flex justify-between items-center">
-        <h1 class="text-xl font-bold">Pathfinder AI</h1>
-        <button id="logout-button" class="text-sm text-gray-400 hover:text-white">Logout</button>
-    </nav>
+<header class="comic-panel rounded-lg p-4 flex justify-between items-center mb-8">
+    <h1 class="text-3xl">Pathfinder HQ</h1>
+    <div class="flex items-center gap-4">
+        <button id="theme-toggle" class="font-bold text-sm">TOGGLE THEME</button>
+        <div id="profile-avatar" class="w-10 h-10 bg-blue-500 dark:bg-yellow-400 rounded-full cursor-pointer flex items-center justify-center font-bold text-white dark:text-black text-lg">?</div>
+    </div>
 </header>
 
-<main class="container mx-auto p-4 sm:p-6 lg:p-8">
-    <div class="max-w-4xl mx-auto">
-        <section id="input-section" class="card p-8 rounded-lg">
-            <h2 class="text-2xl font-bold tracking-tight">Create Your Learning Roadmap</h2>
-            <p class="mt-2 text-gray-400">Tell us your goals, and we'll chart the course.</p>
-            <form id="roadmap-form" class="mt-6 grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div class="md:col-span-2">
-                    <label for="topic" class="block text-sm font-medium text-gray-300 mb-1">What do you want to learn?</label>
-                    <input type="text" id="topic" required class="w-full p-3 custom-input rounded-md" placeholder="e.g., React for web development">
+<main class="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
+    <div class="lg:col-span-1">
+        <div class="comic-panel rounded-lg p-6 sticky top-24">
+            <h2 class="comic-sticker px-2 py-1 -mt-10 ml-2">Mission Briefing</h2>
+            <form id="roadmap-form" class="mt-4 space-y-4">
+                <div>
+                    <label class="font-bold">Objective:</label>
+                    <input type="text" id="topic" required class="w-full p-2 custom-input rounded-md" placeholder="e.g., Learn Quantum Physics">
                 </div>
                 <div>
-                    <label for="skillLevel" class="block text-sm font-medium text-gray-300 mb-1">Your current skill level?</label>
-                    <select id="skillLevel" class="w-full p-3 custom-input rounded-md">
-                        <option>Beginner</option>
-                        <option>Intermediate</option>
-                        <option>Expert</option>
-                    </select>
+                    <label class="font-bold">Skill Level:</label>
+                    <select id="skillLevel" class="w-full p-2 custom-input rounded-md"><option>Beginner</option><option selected>Intermediate</option><option>Expert</option></select>
                 </div>
                 <div>
-                    <label for="timeCommitment" class="block text-sm font-medium text-gray-300 mb-1">Time per week?</label>
-                    <input type="text" id="timeCommitment" required class="w-full p-3 custom-input rounded-md" placeholder="e.g., 5 hours">
+                    <label class="font-bold">Weekly Commitment:</label>
+                    <input type="text" id="timeCommitment" required class="w-full p-2 custom-input rounded-md" placeholder="e.g., 8 hours">
                 </div>
-                <div class="md:col-span-2">
-                    <label for="totalTimeframe" class="block text-sm font-medium text-gray-300 mb-1">Total timeframe to learn?</label>
-                    <input type="text" id="totalTimeframe" required class="w-full p-3 custom-input rounded-md" placeholder="e.g., 3 months">
+                <div>
+                    <label class="font-bold">Total Timeframe:</label>
+                    <input type="text" id="totalTimeframe" required class="w-full p-2 custom-input rounded-md" placeholder="e.g., 3 months">
                 </div>
-                <div class="md:col-span-2">
-                    <button type="submit" class="w-full py-3 font-bold text-white rounded-md shiny-button">Generate My Roadmap</button>
-                </div>
+                <button type="submit" class="w-full py-2 font-bold text-xl tracking-wider comic-button rounded-md text-white">LAUNCH!</button>
             </form>
-        </section>
-
-        <div id="loading-indicator" class="hidden text-center py-12">
-            <p class="text-lg text-gray-400">Charting your course...</p>
         </div>
+    </div>
 
-        <section id="results-dashboard" class="hidden mt-8 space-y-8"></section>
+    <div id="dashboard-column" class="lg:col-span-2 space-y-8">
+        <div id="initial-state" class="comic-panel rounded-lg p-8 text-center">
+            <h3 class="text-2xl">Awaiting Your Mission</h3>
+            <p>Fill out the briefing to get your roadmap!</p>
+        </div>
+        <div id="loading-indicator" class="hidden comic-panel rounded-lg p-8 text-center">
+            <h3 class="text-2xl animate-pulse">ANALYZING INTEL...</h3>
+        </div>
     </div>
 </main>
 
+<div id="profile-modal" class="hidden fixed inset-0 z-50 modal-overlay items-center justify-center">
+    <div class="comic-panel bg-white dark:bg-gray-800 rounded-lg p-8 max-w-sm w-full text-center space-y-4">
+        <h2 class="text-3xl">AGENT PROFILE</h2>
+        <p id="user-email-display" class="font-bold text-lg bg-gray-200 dark:bg-gray-600 p-2 rounded"></p>
+        <button id="logout-button" class="w-full py-2 font-bold text-xl comic-button rounded-md text-white !bg-red-500">LOGOUT</button>
+        <button id="close-modal-button" class="text-sm text-gray-500 mt-2">Close</button>
+    </div>
+</div>
+
 <script>
-    document.getElementById('logout-button').addEventListener('click', () => {
-        localStorage.removeItem('jwt_token');
+    // --- COMPLETE JAVASCRIPT LOGIC ---
+    const userEmail = localStorage.getItem('user_email');
+
+    // --- ELEMENT SELECTORS ---
+    const themeToggle = document.getElementById('theme-toggle');
+    const profileAvatar = document.getElementById('profile-avatar');
+    const profileModal = document.getElementById('profile-modal');
+    const closeModalButton = document.getElementById('close-modal-button');
+    const logoutButton = document.getElementById('logout-button');
+    const userEmailDisplay = document.getElementById('user-email-display');
+    const roadmapForm = document.getElementById('roadmap-form');
+    const resultsDashboard = document.getElementById('dashboard-column');
+    const initialState = document.getElementById('initial-state');
+    const loadingIndicator = document.getElementById('loading-indicator');
+
+    let timelineChart = null;
+
+    // --- THEME LOGIC ---
+    themeToggle.addEventListener('click', () => {
+        document.body.classList.toggle('dark-mode');
+        localStorage.setItem('theme', document.body.classList.contains('dark-mode') ? 'dark' : 'light');
+    });
+
+    // --- PROFILE MODAL LOGIC ---
+    if (userEmail) {
+        profileAvatar.textContent = userEmail.charAt(0).toUpperCase();
+        userEmailDisplay.textContent = userEmail;
+    }
+    profileAvatar.addEventListener('click', () => profileModal.classList.remove('hidden'));
+    closeModalButton.addEventListener('click', () => profileModal.classList.add('hidden'));
+    logoutButton.addEventListener('click', () => {
+        localStorage.clear();
         window.location.href = '/login.html';
     });
 
-    const roadmapForm = document.getElementById('roadmap-form');
-    const loadingIndicator = document.getElementById('loading-indicator');
-    const resultsDashboard = document.getElementById('results-dashboard');
-
+    // --- ROADMAP FORM SUBMISSION ---
     roadmapForm.addEventListener('submit', async (e) => {
         e.preventDefault();
+        const submitButton = e.submitter;
+        const originalButtonText = submitButton.textContent;
+        submitButton.textContent = 'LAUNCHING...';
+        submitButton.disabled = true;
 
         const requestData = {
             topic: document.getElementById('topic').value,
@@ -91,12 +154,12 @@
             totalTimeframe: document.getElementById('totalTimeframe').value
         };
 
-        loadingIndicator.classList.remove('hidden');
-        resultsDashboard.classList.add('hidden');
+        initialState.classList.add('hidden');
         resultsDashboard.innerHTML = '';
+        loadingIndicator.classList.remove('hidden');
+        resultsDashboard.appendChild(loadingIndicator);
 
         try {
-            const token = localStorage.getItem('jwt_token');
             const response = await fetch('/api/v1/roadmaps/generate', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
@@ -104,100 +167,92 @@
             });
 
             if (response.status === 403) { window.location.href = '/login.html'; return; }
-            if (!response.ok) { throw new Error('Failed to generate roadmap.'); }
+            if (!response.ok) { throw new Error('AI failed to generate intel. Mission aborted.'); }
 
-            const roadmapJson = await response.json();
-            displayRoadmap(roadmapJson);
+            const roadmapData = JSON.parse(await response.text());
+            displayRoadmap(roadmapData);
 
         } catch (error) {
-            resultsDashboard.innerHTML = `<p class="text-red-400 text-center">${error.message}</p>`;
+            resultsDashboard.innerHTML = `<div class="comic-panel rounded-lg p-8 text-center text-red-500 font-bold">${error.message}</div>`;
         } finally {
             loadingIndicator.classList.add('hidden');
-            resultsDashboard.classList.remove('hidden');
+            submitButton.textContent = originalButtonText;
+            submitButton.disabled = false;
         }
     });
 
+    // --- DISPLAY LOGIC ---
     function displayRoadmap(data) {
-        // 1. Summary Card
-        const summaryCard = `
-            <div class="card p-6 rounded-lg">
-                <h2 class="text-3xl font-bold">${data.mainGoal}</h2>
-                <p class="text-purple-400">Total Duration: ${data.totalDuration}</p>
-            </div>
-        `;
-        resultsDashboard.innerHTML += summaryCard;
+        resultsDashboard.innerHTML = '';
 
-        // 2. Timeline Chart
-        const chartCard = `
-            <div class="card p-6 rounded-lg">
-                <h3 class="text-xl font-bold mb-4">Learning Timeline</h3>
-                <canvas id="timelineChart"></canvas>
-            </div>
-        `;
-        resultsDashboard.innerHTML += chartCard;
+        const summaryCard = document.createElement('div');
+        summaryCard.className = 'comic-panel rounded-lg p-6';
+        summaryCard.innerHTML = `<h2 class="comic-sticker px-2 py-1 -mt-10 ml-2">Mission Dossier</h2><h3 class="text-3xl mt-2">${data.mainGoal}</h3><p class="font-bold text-blue-500 dark:text-yellow-400">Total Duration: ${data.totalDuration}</p>`;
+        resultsDashboard.appendChild(summaryCard);
+
+        const chartCard = document.createElement('div');
+        chartCard.className = 'comic-panel rounded-lg p-6';
+        chartCard.innerHTML = `<h3 class="text-2xl mb-4">Phase Analysis</h3><canvas id="timelineChart"></canvas>`;
+        resultsDashboard.appendChild(chartCard);
         renderTimelineChart(data.phases);
 
-        // 3. Phase Cards
         data.phases.forEach(phase => {
+            const phaseCard = document.createElement('div');
+            phaseCard.className = 'comic-panel rounded-lg p-6 space-y-4';
+
             let topicsHtml = '';
             phase.topics.forEach(topic => {
-                topicsHtml += `
-                    <tr class="border-b border-gray-700">
-                        <td class="p-2">
-                            <p class="font-semibold text-white">${topic.topicName}</p>
-                            <p class="text-sm text-gray-400">${topic.description}</p>
-                        </td>
-                        <td class="p-2 text-center text-white">${topic.estimatedHours}h</td>
-                    </tr>
-                `;
+                topicsHtml += `<tr class="border-b border-gray-200 dark:border-gray-600"><td class="py-2 pr-2"><p class="font-bold">${topic.topicName}</p><p class="text-sm text-gray-600 dark:text-gray-400">${topic.description}</p></td><td class="py-2 px-2 text-center font-bold">${topic.estimatedHours}h</td></tr>`;
             });
 
-            const phaseCard = `
-                <div class="card p-6 rounded-lg space-y-4">
-                    <div>
-                        <h3 class="text-purple-400 font-bold">${phase.duration}</h3>
-                        <p class="text-2xl font-bold">${phase.phaseTitle}</p>
-                    </div>
-                    <table class="w-full text-left">
-                        <thead><tr class="border-b border-gray-700"><th class="p-2 text-sm">Topic</th><th class="p-2 text-sm text-center">Est. Hours</th></tr></thead>
-                        <tbody>${topicsHtml}</tbody>
-                    </table>
-                    <div class="bg-black/20 p-4 rounded-md">
-                        <h4 class="font-semibold">Project: ${phase.project.projectName}</h4>
-                        <p class="text-sm text-gray-400 mt-1">${phase.project.projectDescription}</p>
-                    </div>
+            phaseCard.innerHTML = `
+                <div>
+                    <h3 class="text-2xl text-blue-500 dark:text-yellow-400">${phase.phaseTitle}</h3>
+                    <p class="font-bold text-sm text-gray-500">${phase.duration}</p>
+                </div>
+                <table class="w-full text-left text-sm"><tbody>${topicsHtml}</tbody></table>
+                <div class="bg-gray-100 dark:bg-gray-800 border-2 border-dashed border-gray-300 dark:border-gray-600 p-4 rounded-lg">
+                    <h4 class="font-bold text-lg">Field Project: ${phase.project.projectName}</h4>
+                    <p class="text-sm text-gray-600 dark:text-gray-400">${phase.project.projectDescription}</p>
                 </div>
             `;
-            resultsDashboard.innerHTML += phaseCard;
+            resultsDashboard.appendChild(phaseCard);
         });
     }
 
+    // --- CHART RENDERING LOGIC ---
     function renderTimelineChart(phases) {
+        if (timelineChart) { timelineChart.destroy(); }
         const ctx = document.getElementById('timelineChart').getContext('2d');
-        const labels = phases.map(p => p.duration);
-        const data = phases.map(p => {
-            const hours = p.topics.reduce((sum, t) => sum + t.estimatedHours, 0);
-            return hours;
-        });
-
-        new Chart(ctx, {
-            type: 'bar',
-            data: {
-                labels: labels,
-                datasets: [{
-                    label: 'Estimated Hours per Phase',
-                    data: data,
-                    backgroundColor: 'rgba(109, 40, 217, 0.6)',
-                    borderColor: 'rgba(109, 40, 217, 1)',
-                    borderWidth: 1
-                }]
-            },
+        const data = {
+            labels: phases.map(p => p.duration),
+            datasets: [{
+                label: 'Est. Hours',
+                data: phases.map(p => p.topics.reduce((sum, t) => sum + t.estimatedHours, 0)),
+                backgroundColor: document.body.classList.contains('dark-mode') ? 'rgba(59, 130, 246, 0.7)' : 'rgba(251, 191, 36, 0.8)',
+                borderColor: document.body.classList.contains('dark-mode') ? '#3B82F6' : '#FBBF24',
+                borderWidth: 3
+            }]
+        };
+        timelineChart = new Chart(ctx, {
+            type: 'bar', data: data,
             options: {
-                scales: { y: { ticks: { color: '#A1A1AA' } }, x: { ticks: { color: '#A1A1AA' } } }
+                responsive: true,
+                plugins: { legend: { display: false } },
+                scales: {
+                    y: { grid: { color: '#E5E7EB' }, ticks: { color: '#4B5563' } },
+                    x: { grid: { color: '#E5E7EB' }, ticks: { color: '#4B5563' } }
+                }
             }
         });
+        if(document.body.classList.contains('dark-mode')){
+            timelineChart.options.scales.y.grid.color = '#4B5563';
+            timelineChart.options.scales.x.grid.color = '#4B5563';
+            timelineChart.options.scales.y.ticks.color = '#D1D5DB';
+            timelineChart.options.scales.x.ticks.color = '#D1D5DB';
+            timelineChart.update();
+        }
     }
-
 </script>
 </body>
 </html>
