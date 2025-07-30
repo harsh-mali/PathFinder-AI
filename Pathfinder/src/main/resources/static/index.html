@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Pathfinder AI</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #09090B; color: #FAFAFA; }
+        .card { background-color: #18181B; border: 1px solid #27272A; }
+        .custom-input { background-color: #27272A; border: 1px solid #3f3f46; }
+        .custom-input:focus { border-color: #6D28D9; box-shadow: 0 0 0 3px rgba(109, 40, 217, 0.3); outline: none; }
+        .shiny-button { background: linear-gradient(to right, #6D28D9, #EC4899); }
+    </style>
+</head>
+<body class="min-h-screen">
+
+<script>
+    // Redirect to login if no token is found
+    if (!localStorage.getItem('jwt_token')) {
+        window.location.href = '/login.html';
+    }
+</script>
+
+<header class="card sticky top-0 z-50">
+    <nav class="container mx-auto px-6 py-4 flex justify-between items-center">
+        <h1 class="text-xl font-bold">Pathfinder AI</h1>
+        <button id="logout-button" class="text-sm text-gray-400 hover:text-white">Logout</button>
+    </nav>
+</header>
+
+<main class="container mx-auto p-4 sm:p-6 lg:p-8">
+    <div class="max-w-4xl mx-auto">
+        <section id="input-section" class="card p-8 rounded-lg">
+            <h2 class="text-2xl font-bold tracking-tight">Create Your Learning Roadmap</h2>
+            <p class="mt-2 text-gray-400">Tell us your goals, and we'll chart the course.</p>
+            <form id="roadmap-form" class="mt-6 grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="md:col-span-2">
+                    <label for="topic" class="block text-sm font-medium text-gray-300 mb-1">What do you want to learn?</label>
+                    <input type="text" id="topic" required class="w-full p-3 custom-input rounded-md" placeholder="e.g., React for web development">
+                </div>
+                <div>
+                    <label for="skillLevel" class="block text-sm font-medium text-gray-300 mb-1">Your current skill level?</label>
+                    <select id="skillLevel" class="w-full p-3 custom-input rounded-md">
+                        <option>Beginner</option>
+                        <option>Intermediate</option>
+                        <option>Expert</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="timeCommitment" class="block text-sm font-medium text-gray-300 mb-1">Time per week?</label>
+                    <input type="text" id="timeCommitment" required class="w-full p-3 custom-input rounded-md" placeholder="e.g., 5 hours">
+                </div>
+                <div class="md:col-span-2">
+                    <label for="totalTimeframe" class="block text-sm font-medium text-gray-300 mb-1">Total timeframe to learn?</label>
+                    <input type="text" id="totalTimeframe" required class="w-full p-3 custom-input rounded-md" placeholder="e.g., 3 months">
+                </div>
+                <div class="md:col-span-2">
+                    <button type="submit" class="w-full py-3 font-bold text-white rounded-md shiny-button">Generate My Roadmap</button>
+                </div>
+            </form>
+        </section>
+
+        <div id="loading-indicator" class="hidden text-center py-12">
+            <p class="text-lg text-gray-400">Charting your course...</p>
+        </div>
+
+        <section id="results-dashboard" class="hidden mt-8 space-y-8"></section>
+    </div>
+</main>
+
+<script>
+    document.getElementById('logout-button').addEventListener('click', () => {
+        localStorage.removeItem('jwt_token');
+        window.location.href = '/login.html';
+    });
+
+    const roadmapForm = document.getElementById('roadmap-form');
+    const loadingIndicator = document.getElementById('loading-indicator');
+    const resultsDashboard = document.getElementById('results-dashboard');
+
+    roadmapForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        const requestData = {
+            topic: document.getElementById('topic').value,
+            skillLevel: document.getElementById('skillLevel').value,
+            timeCommitment: document.getElementById('timeCommitment').value,
+            totalTimeframe: document.getElementById('totalTimeframe').value
+        };
+
+        loadingIndicator.classList.remove('hidden');
+        resultsDashboard.classList.add('hidden');
+        resultsDashboard.innerHTML = '';
+
+        try {
+            const token = localStorage.getItem('jwt_token');
+            const response = await fetch('/api/v1/roadmaps/generate', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                body: JSON.stringify(requestData)
+            });
+
+            if (response.status === 403) { window.location.href = '/login.html'; return; }
+            if (!response.ok) { throw new Error('Failed to generate roadmap.'); }
+
+            const roadmapJson = await response.json();
+            displayRoadmap(roadmapJson);
+
+        } catch (error) {
+            resultsDashboard.innerHTML = `<p class="text-red-400 text-center">${error.message}</p>`;
+        } finally {
+            loadingIndicator.classList.add('hidden');
+            resultsDashboard.classList.remove('hidden');
+        }
+    });
+
+    function displayRoadmap(data) {
+        // 1. Summary Card
+        const summaryCard = `
+            <div class="card p-6 rounded-lg">
+                <h2 class="text-3xl font-bold">${data.mainGoal}</h2>
+                <p class="text-purple-400">Total Duration: ${data.totalDuration}</p>
+            </div>
+        `;
+        resultsDashboard.innerHTML += summaryCard;
+
+        // 2. Timeline Chart
+        const chartCard = `
+            <div class="card p-6 rounded-lg">
+                <h3 class="text-xl font-bold mb-4">Learning Timeline</h3>
+                <canvas id="timelineChart"></canvas>
+            </div>
+        `;
+        resultsDashboard.innerHTML += chartCard;
+        renderTimelineChart(data.phases);
+
+        // 3. Phase Cards
+        data.phases.forEach(phase => {
+            let topicsHtml = '';
+            phase.topics.forEach(topic => {
+                topicsHtml += `
+                    <tr class="border-b border-gray-700">
+                        <td class="p-2">
+                            <p class="font-semibold text-white">${topic.topicName}</p>
+                            <p class="text-sm text-gray-400">${topic.description}</p>
+                        </td>
+                        <td class="p-2 text-center text-white">${topic.estimatedHours}h</td>
+                    </tr>
+                `;
+            });
+
+            const phaseCard = `
+                <div class="card p-6 rounded-lg space-y-4">
+                    <div>
+                        <h3 class="text-purple-400 font-bold">${phase.duration}</h3>
+                        <p class="text-2xl font-bold">${phase.phaseTitle}</p>
+                    </div>
+                    <table class="w-full text-left">
+                        <thead><tr class="border-b border-gray-700"><th class="p-2 text-sm">Topic</th><th class="p-2 text-sm text-center">Est. Hours</th></tr></thead>
+                        <tbody>${topicsHtml}</tbody>
+                    </table>
+                    <div class="bg-black/20 p-4 rounded-md">
+                        <h4 class="font-semibold">Project: ${phase.project.projectName}</h4>
+                        <p class="text-sm text-gray-400 mt-1">${phase.project.projectDescription}</p>
+                    </div>
+                </div>
+            `;
+            resultsDashboard.innerHTML += phaseCard;
+        });
+    }
+
+    function renderTimelineChart(phases) {
+        const ctx = document.getElementById('timelineChart').getContext('2d');
+        const labels = phases.map(p => p.duration);
+        const data = phases.map(p => {
+            const hours = p.topics.reduce((sum, t) => sum + t.estimatedHours, 0);
+            return hours;
+        });
+
+        new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Estimated Hours per Phase',
+                    data: data,
+                    backgroundColor: 'rgba(109, 40, 217, 0.6)',
+                    borderColor: 'rgba(109, 40, 217, 1)',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                scales: { y: { ticks: { color: '#A1A1AA' } }, x: { ticks: { color: '#A1A1AA' } } }
+            }
+        });
+    }
+
+</script>
+</body>
+</html>
