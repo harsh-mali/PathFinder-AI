@@ -3,136 +3,94 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>HQ - Pathfinder AI</title>
+    <title>Pathfinder AI - The Adventure Begins!</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Bangers&family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
     <style>
-        :root {
-            --bg-light: #EFF6FF; --bg-dark: #111827;
-            --card-light: #FFFFFF; --card-dark: #1F2937;
-            --text-light: #111827; --text-dark: #F9FAFB;
-            --border-light: #1F2937; --border-dark: #F9FAFB;
-            --accent-yellow: #FBBF24; --accent-blue: #3B82F6;
+        body { font-family: 'Inter', sans-serif; background-color: #111827; color: #F3F4F6; }
+        h1, h2 { font-family: 'Bangers', cursive; letter-spacing: 2px; }
+        .comic-panel { background-color: #374151; border: 4px solid #F3F4F6; box-shadow: 8px 8px 0px -2px #3B82F6; }
+        .custom-input { background-color: #1F2937; border: 2px solid #9CA3AF; color: white; }
+        .custom-input:focus { border-color: #FBBF24; box-shadow: 0 0 0 3px rgba(251, 191, 36, 0.4); outline: none; }
+        .comic-button {
+            background-color: #3B82F6; color: white;
+            border: 3px solid #F3F4F6;
+            box-shadow: 4px 4px 0px #F3F4F6;
+            transition: all 0.1s ease-in-out;
         }
-        body { font-family: 'Inter', sans-serif; transition: background-color 0.3s, color 0.3s; }
-        body.dark-mode { background-color: var(--bg-dark); color: var(--text-dark); }
-        body:not(.dark-mode) { background-color: var(--bg-light); color: var(--text-light); }
-        h1, h2, h3 { font-family: 'Bangers', cursive; letter-spacing: 1.5px; }
-        .comic-panel {
-            background-color: var(--card-light);
-            border: 3px solid var(--border-light);
-            transition: all 0.3s;
-        }
-        .dark-mode .comic-panel { background-color: var(--card-dark); border-color: var(--border-dark); }
-        .comic-sticker {
-            background-color: var(--accent-yellow); color: black;
-            transform: rotate(-3deg);
-            display: inline-block;
-            font-size: 1.5rem;
-        }
-        .dark-mode .comic-sticker { background-color: var(--accent-blue); color: white; }
-        .custom-input { border: 2px solid #6B7280; }
-        .comic-button { background-color: var(--accent-blue); border: 2px solid var(--border-light); box-shadow: 4px 4px 0px var(--border-light); }
-        .dark-mode .comic-button { border-color: var(--border-dark); box-shadow: 4px 4px 0px var(--border-dark); }
         .comic-button:active { transform: translate(4px, 4px); box-shadow: none; }
-        .modal-overlay { background-color: rgba(0,0,0,0.6); backdrop-filter: blur(4px); }
     </style>
 </head>
-<body class="p-4">
+<body class="flex items-center justify-center min-h-screen p-4">
 
-<script>
-    const token = localStorage.getItem('jwt_token');
-    if (!token) { window.location.href = '/login.html'; }
-    // Theme initialization
-    if (localStorage.getItem('theme') === 'dark') {
-        document.body.classList.add('dark-mode');
-    }
-</script>
-
-<header class="comic-panel rounded-lg p-4 flex justify-between items-center mb-8">
-    <h1 class="text-3xl">Pathfinder HQ</h1>
-    <div class="flex items-center gap-4">
-        <button id="theme-toggle" class="font-bold text-sm">TOGGLE THEME</button>
-        <div id="profile-avatar" class="w-10 h-10 bg-blue-500 dark:bg-yellow-400 rounded-full cursor-pointer flex items-center justify-center font-bold text-white dark:text-black text-lg">
-            ?
-        </div>
-    </div>
-</header>
-
-<main class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-    <div class="lg:col-span-1">
-        <div class="comic-panel rounded-lg p-6">
-            <h2 class="comic-sticker px-2 py-1 -mt-10 ml-2">Mission Briefing</h2>
-            <form id="roadmap-form" class="mt-4 space-y-4">
-                <div>
-                    <label class="font-bold">Objective:</label>
-                    <input type="text" id="topic" required class="w-full p-2 custom-input rounded-md" placeholder="e.g., Learn Quantum Physics">
-                </div>
-                <button type="submit" class="w-full py-2 font-bold text-xl tracking-wider comic-button rounded-md text-white">LAUNCH!</button>
-            </form>
-        </div>
+<div class="comic-panel w-full max-w-md rounded-lg p-8 space-y-6">
+    <div class="text-center">
+        <h1 class="text-6xl text-blue-500" style="text-shadow: 3px 3px 0px black;">Pathfinder</h1>
+        <h2 class="text-4xl text-yellow-400 -mt-4">A.I.</h2>
+        <p class="font-bold text-gray-300">YOUR LEARNING ADVENTURE STARTS NOW!</p>
     </div>
 
-    <div id="dashboard-column" class="lg:col-span-2 space-y-8">
-        <div id="initial-state" class="comic-panel rounded-lg p-8 text-center">
-            <h3 class="text-2xl">Awaiting Your Mission</h3>
-            <p>Fill out the briefing to get your roadmap!</p>
-        </div>
-        <div id="loading-indicator" class="hidden comic-panel rounded-lg p-8 text-center">
-            <h3 class="text-2xl animate-pulse">ANALYZING INTEL...</h3>
-        </div>
+    <div id="login-view">
+        <form id="login-form" class="space-y-4">
+            <input name="email" type="email" autocomplete="email" required class="w-full p-3 custom-input rounded-md" placeholder="Codename (Email)">
+            <input name="password" type="password" autocomplete="current-password" required class="w-full p-3 custom-input rounded-md" placeholder="Secret Key (Password)">
+            <button type="submit" class="w-full py-2 font-bold text-2xl tracking-wider comic-button rounded-md">GO!</button>
+        </form>
+        <p class="text-center text-sm mt-4">New Agent? <a href="#" id="show-register" class="font-bold text-yellow-400 hover:underline">Register Here!</a></p>
     </div>
-</main>
 
-<div id="profile-modal" class="hidden fixed inset-0 modal-overlay items-center justify-center">
-    <div class="comic-panel bg-white dark:bg-gray-800 rounded-lg p-8 max-w-sm w-full text-center space-y-4">
-        <h2 class="text-3xl">AGENT PROFILE</h2>
-        <p id="user-email-display" class="font-bold text-lg bg-gray-200 dark:bg-gray-600 p-2 rounded"></p>
-        <button id="logout-button" class="w-full py-2 font-bold text-xl comic-button rounded-md text-white !bg-red-500">LOGOUT</button>
-        <button id="close-modal-button" class="text-sm text-gray-500 mt-2">Close</button>
+    <div id="register-view" class="hidden">
+        <form id="register-form" class="space-y-4">
+            <input name="username" type="text" required class="w-full p-3 custom-input rounded-md" placeholder="Agent Name (Username)">
+            <input name="email" type="email" autocomplete="email" required class="w-full p-3 custom-input rounded-md" placeholder="Codename (Email)">
+            <input name="password" type="password" required class="w-full p-3 custom-input rounded-md" placeholder="Secret Key (Password)">
+            <button type="submit" class="w-full py-2 font-bold text-2xl tracking-wider comic-button rounded-md">ENLIST!</button>
+        </form>
+        <p class="text-center text-sm mt-4">Already an Agent? <a href="#" id="show-login" class="font-bold text-yellow-400 hover:underline">Login Here!</a></p>
     </div>
+
+    <div id="message-area" class="min-h-[24px] text-center text-yellow-400 font-bold text-lg"></div>
 </div>
 
 <script>
-    // --- JavaScript for Functionality ---
-    const token = localStorage.getItem('jwt_token');
-    const userEmail = localStorage.getItem('user_email');
+    const loginView = document.getElementById('login-view');
+    const registerView = document.getElementById('register-view');
+    const showRegisterLink = document.getElementById('show-register');
+    const showLoginLink = document.getElementById('show-login');
+    const loginForm = document.getElementById('login-form');
+    const registerForm = document.getElementById('register-form');
+    const messageArea = document.getElementById('message-area');
 
-    // --- ELEMENT SELECTORS ---
-    const themeToggle = document.getElementById('theme-toggle');
-    const profileAvatar = document.getElementById('profile-avatar');
-    const profileModal = document.getElementById('profile-modal');
-    const closeModalButton = document.getElementById('close-modal-button');
-    const logoutButton = document.getElementById('logout-button');
-    const userEmailDisplay = document.getElementById('user-email-display');
-    const roadmapForm = document.getElementById('roadmap-form');
-    // ... other selectors from previous version
+    showRegisterLink.addEventListener('click', (e) => { e.preventDefault(); loginView.classList.add('hidden'); registerView.classList.remove('hidden'); });
+    showLoginLink.addEventListener('click', (e) => { e.preventDefault(); registerView.classList.add('hidden'); loginView.classList.remove('hidden'); });
 
-    // --- THEME LOGIC ---
-    themeToggle.addEventListener('click', () => {
-        document.body.classList.toggle('dark-mode');
-        localStorage.setItem('theme', document.body.classList.contains('dark-mode') ? 'dark' : 'light');
-    });
+    async function handleAuth(endpoint, data, button) {
+        messageArea.textContent = '';
+        const originalButtonText = button.textContent;
+        button.textContent = '...';
+        button.disabled = true;
 
-    // --- PROFILE MODAL LOGIC ---
-    if (userEmail) {
-        profileAvatar.textContent = userEmail.charAt(0).toUpperCase();
-        userEmailDisplay.textContent = userEmail;
+        try {
+            const response = await fetch(endpoint, {
+                method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data)
+            });
+            if (!response.ok) throw new Error('ACCESS DENIED! CHECK YOUR CREDENTIALS.');
+            const result = await response.json();
+            localStorage.setItem('jwt_token', result.token);
+            localStorage.setItem('user_email', data.email);
+            window.location.href = '/index.html';
+        } catch (error) {
+            messageArea.textContent = error.message;
+        } finally {
+            button.textContent = originalButtonText;
+            button.disabled = false;
+        }
     }
-    profileAvatar.addEventListener('click', () => profileModal.classList.remove('hidden'));
-    closeModalButton.addEventListener('click', () => profileModal.classList.add('hidden'));
-    logoutButton.addEventListener('click', () => {
-        localStorage.clear();
-        window.location.href = '/login.html';
-    });
 
-    // --- ROADMAP GENERATION LOGIC (Adapted from previous version) ---
-    // ... The form submission and display logic (displayRoadmap, renderTimelineChart)
-    // goes here. It functions the same, but the output will be styled
-    // by the new HTML and CSS classes.
+    loginForm.addEventListener('submit', (e) => { e.preventDefault(); handleAuth('/api/v1/auth/authenticate', { email: loginForm.email.value, password: loginForm.password.value }, e.submitter); });
+    registerForm.addEventListener('submit', (e) => { e.preventDefault(); handleAuth('/api/v1/auth/register', { username: registerForm.username.value, email: registerForm.email.value, password: registerForm.password.value }, e.submitter); });
 </script>
 </body>
 </html>
